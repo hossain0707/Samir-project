@@ -18,7 +18,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Samir Soft',
+    name='CBDs',
     icon='assets/cbds.ico',
     debug=False,
     bootloader_ignore_signals=False,

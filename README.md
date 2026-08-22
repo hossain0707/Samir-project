@@ -1,4 +1,4 @@
-# Samir Soft — CBDS Business Suite
+# CBDs — China BD Store Business Suite
 
 A polished Windows desktop application for China BD Store (CBDS) product sourcing, inventory, shipment costing, partner expenses, and profitability management.
 
@@ -17,7 +17,7 @@ A polished Windows desktop application for China BD Store (CBDS) product sourcin
 
 ## Windows installation
 
-Download `Samir-Soft-Setup.exe` from the latest GitHub release or the newest successful **Build Windows EXE** workflow run.
+Download `CBDs.exe` from the newest successful **Build Windows EXE** workflow run.
 
 Default first sign-in:
 
@@ -34,7 +34,7 @@ Python 3.11+ is required.
 python app.py
 ```
 
-The database is stored in `%LOCALAPPDATA%\SamirSoft\samir_soft.db`.
+The database is stored in `%LOCALAPPDATA%\CBDs\cbds.db`.
 
 ## Build the executable locally on Windows
 
@@ -43,7 +43,7 @@ python -m pip install -r requirements.txt pyinstaller
 pyinstaller SamirSoft.spec --clean --noconfirm
 ```
 
-The executable will be created at `dist\Samir Soft.exe`.
+The executable will be created at `dist\CBDs.exe`.
 
 ## Data model and calculation rules
 
