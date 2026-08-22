@@ -1,6 +1,6 @@
 import unittest
 
-from app import calculate_cost
+from app import APP_NAME, DEFAULT_FONT, calculate_cost
 
 
 class Product(dict):
@@ -8,6 +8,10 @@ class Product(dict):
 
 
 class CostingTests(unittest.TestCase):
+    def test_windows_safe_brand_and_default_font(self):
+        self.assertEqual(APP_NAME, "CBDs")
+        self.assertEqual(DEFAULT_FONT, "{Segoe UI} 10")
+
     def test_workbook_formula_equivalence(self):
         product = Product(purchase_rmb=39, weight_g=380, shipping_rate_kg=780)
         result = calculate_cost(product, total_purchase_rmb=1000, sourcing_rmb=277.56, rate=19.2, retail=30, wholesale=20)
