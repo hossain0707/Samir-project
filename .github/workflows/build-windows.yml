@@ -26,20 +26,20 @@ jobs:
         run: pyinstaller SamirSoft.spec --clean --noconfirm
       - name: Create checksum
         shell: pwsh
-        run: (Get-FileHash 'dist/Samir Soft.exe' -Algorithm SHA256).Hash + '  Samir Soft.exe' | Out-File -Encoding ascii 'dist/Samir Soft.exe.sha256'
+        run: (Get-FileHash 'dist/CBDs.exe' -Algorithm SHA256).Hash + '  CBDs.exe' | Out-File -Encoding ascii 'dist/CBDs.exe.sha256'
       - name: Upload executable artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Samir-Soft-Windows
+          name: CBDs-Windows
           path: |
-            dist/Samir Soft.exe
-            dist/Samir Soft.exe.sha256
+            dist/CBDs.exe
+            dist/CBDs.exe.sha256
           if-no-files-found: error
       - name: Publish tagged release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/Samir Soft.exe
-            dist/Samir Soft.exe.sha256
+            dist/CBDs.exe
+            dist/CBDs.exe.sha256
           generate_release_notes: true
