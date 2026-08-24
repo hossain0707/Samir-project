@@ -1,4 +1,4 @@
-# China BD Store — CBDs v2.0 Specification
+# China BD Store — CBDs v2.0.1 Specification
 
 ## Platform and objective
 
@@ -7,9 +7,9 @@ CBDs is an offline-first Windows desktop business-management application built i
 ## Core calculation rules
 
 - Manual RMB-to-BDT exchange rate controls all converted values.
-- Shipment RMB = product weight in kilograms × batch shipment rate per kilogram.
+- Shipment BDT = product weight in kilograms × batch shipment rate per kilogram in BDT.
 - Sourcing cost is allocated by each product's share of total purchase value.
-- Landed cost = purchase + shipment + allocated sourcing.
+- Landed BDT = (purchase RMB + allocated sourcing RMB) × exchange rate + shipment BDT.
 - Retail and wholesale prices use independently configurable profit margins.
 - Batch code = sanitized four-character company prefix + supply date (`CBDS-YYYYMMDD`).
 - Suggested SKU = rounded weight + first alphabetic variant letter + rounded retail BDT price.

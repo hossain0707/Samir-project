@@ -18,7 +18,7 @@ from PIL import Image, ImageTk
 
 
 APP_NAME = "CBDs"
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.0.1"
 DEFAULT_FONT = "{Segoe UI} 10"
 BG = "#F4F7FB"
 CARD = "#FFFFFF"
@@ -113,7 +113,7 @@ class Database:
           id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT UNIQUE NOT NULL,
           category TEXT NOT NULL, name TEXT NOT NULL, size TEXT, variant TEXT,
           quantity INTEGER NOT NULL CHECK(quantity >= 0), weight_g REAL NOT NULL CHECK(weight_g >= 0),
-          shipping_rate_kg REAL NOT NULL CHECK(shipping_rate_kg >= 0), purchase_rmb REAL NOT NULL CHECK(purchase_rmb >= 0),
+          shipping_rate_bdt REAL NOT NULL CHECK(shipping_rate_bdt >= 0), purchase_rmb REAL NOT NULL CHECK(purchase_rmb >= 0),
           created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
         CREATE TABLE IF NOT EXISTS expenses(
@@ -158,7 +158,7 @@ class Database:
         );
         CREATE TABLE IF NOT EXISTS batches(
           id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT UNIQUE NOT NULL, supply_date TEXT NOT NULL,
-          shipment_rate_kg REAL NOT NULL DEFAULT 0, sourcing_cost_rmb REAL NOT NULL DEFAULT 0,
+          shipment_rate_bdt REAL NOT NULL DEFAULT 0, sourcing_cost_rmb REAL NOT NULL DEFAULT 0,
           status TEXT NOT NULL DEFAULT 'Open', notes TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
         CREATE TABLE IF NOT EXISTS sales(
@@ -182,6 +182,16 @@ class Database:
         self._add_column("products", "image_path", "TEXT")
         self._add_column("products", "batch_code", "TEXT")
         self._add_column("expenses", "batch_code", "TEXT")
+        product_columns = {row[1] for row in self.conn.execute("PRAGMA table_info(products)")}
+        if "shipping_rate_bdt" not in product_columns:
+            self._add_column("products", "shipping_rate_bdt", "REAL NOT NULL DEFAULT 0")
+            if "shipping_rate_kg" in product_columns:
+                self.conn.execute("UPDATE products SET shipping_rate_bdt=shipping_rate_kg")
+        batch_columns = {row[1] for row in self.conn.execute("PRAGMA table_info(batches)")}
+        if "shipment_rate_bdt" not in batch_columns:
+            self._add_column("batches", "shipment_rate_bdt", "REAL NOT NULL DEFAULT 0")
+            if "shipment_rate_kg" in batch_columns:
+                self.conn.execute("UPDATE batches SET shipment_rate_bdt=shipment_rate_kg")
         defaults = {
             "rmb_rate": "19.2", "retail_margin": "30", "wholesale_margin": "20",
             "sourcing_cost_rmb": "277.56", "company_prefix": "CBDS", "supply_date": "2026-08-01"
@@ -206,7 +216,7 @@ class Database:
             if path.exists():
                 rows = json.loads(path.read_text(encoding="utf-8"))["products"]
                 self.conn.executemany(
-                    "INSERT INTO products(code,category,name,size,variant,quantity,weight_g,shipping_rate_kg,purchase_rmb) VALUES(:code,:category,:name,:size,:variant,:quantity,:weight_g,:shipping_rate_kg,:purchase_rmb)", rows
+                    "INSERT INTO products(code,category,name,size,variant,quantity,weight_g,shipping_rate_bdt,purchase_rmb) VALUES(:code,:category,:name,:size,:variant,:quantity,:weight_g,:shipping_rate_bdt,:purchase_rmb)", rows
                 )
         if not self.conn.execute("SELECT 1 FROM expenses LIMIT 1").fetchone():
             expenses = [
@@ -217,7 +227,7 @@ class Database:
         if not self.conn.execute("SELECT 1 FROM partners LIMIT 1").fetchone():
             self.conn.executemany("INSERT INTO partners(partner_code,name) VALUES(?,?)", [("P01","Samir"),("P02","Flower"),("P03","Mustafa")])
         active_code = generate_batch_code(self.setting("company_prefix"), self.setting("supply_date"))
-        self.conn.execute("INSERT OR IGNORE INTO batches(code,supply_date,shipment_rate_kg,sourcing_cost_rmb) VALUES(?,?,?,?)", (active_code,self.setting("supply_date"),780,float(self.setting("sourcing_cost_rmb"))))
+        self.conn.execute("INSERT OR IGNORE INTO batches(code,supply_date,shipment_rate_bdt,sourcing_cost_rmb) VALUES(?,?,?,?)", (active_code,self.setting("supply_date"),780,float(self.setting("sourcing_cost_rmb"))))
         self.conn.commit()
 
     def setting(self, key: str) -> str:
@@ -244,9 +254,9 @@ class Database:
 
     def save_product(self, values: tuple, product_id: int | None = None) -> None:
         if product_id:
-            self.conn.execute("UPDATE products SET code=?,category=?,name=?,size=?,variant=?,quantity=?,weight_g=?,shipping_rate_kg=?,purchase_rmb=?,image_path=?,batch_code=? WHERE id=?", values + (product_id,))
+            self.conn.execute("UPDATE products SET code=?,category=?,name=?,size=?,variant=?,quantity=?,weight_g=?,shipping_rate_bdt=?,purchase_rmb=?,image_path=?,batch_code=? WHERE id=?", values + (product_id,))
         else:
-            self.conn.execute("INSERT INTO products(code,category,name,size,variant,quantity,weight_g,shipping_rate_kg,purchase_rmb,image_path,batch_code) VALUES(?,?,?,?,?,?,?,?,?,?,?)", values)
+            self.conn.execute("INSERT INTO products(code,category,name,size,variant,quantity,weight_g,shipping_rate_bdt,purchase_rmb,image_path,batch_code) VALUES(?,?,?,?,?,?,?,?,?,?,?)", values)
         self.conn.commit()
 
     def delete_product(self, product_id: int) -> None:
@@ -291,9 +301,9 @@ class Database:
 @dataclass(frozen=True)
 class Costing:
     purchase_rmb: float
-    shipping_rmb: float
+    shipping_bdt: float
     sourcing_rmb: float
-    total_rmb: float
+    subtotal_rmb: float
     total_bdt: float
     retail_bdt: float
     wholesale_bdt: float
@@ -301,10 +311,11 @@ class Costing:
 
 def calculate_cost(product, total_purchase_rmb: float, sourcing_rmb: float, rate: float, retail: float, wholesale: float) -> Costing:
     purchase = float(product["purchase_rmb"])
-    shipping = float(product["weight_g"]) / 1000 * float(product["shipping_rate_kg"])
+    shipping = float(product["weight_g"]) / 1000 * float(product["shipping_rate_bdt"])
     allocated = (purchase / total_purchase_rmb * sourcing_rmb) if total_purchase_rmb else 0
-    total = purchase + shipping + allocated
-    return Costing(purchase, shipping, allocated, total, total * rate, total * rate * (1 + retail / 100), total * rate * (1 + wholesale / 100))
+    subtotal = purchase + allocated
+    total_bdt = subtotal * rate + shipping
+    return Costing(purchase, shipping, allocated, subtotal, total_bdt, total_bdt * (1 + retail / 100), total_bdt * (1 + wholesale / 100))
 
 
 class App(tk.Tk):
@@ -522,7 +533,7 @@ class App(tk.Tk):
         win=tk.Toplevel(self);win.title("Edit product" if row else "Add product");win.geometry("580x790");win.configure(bg=CARD);win.transient(self);win.grab_set()
         tk.Label(win,text="Edit product" if row else "New inventory product",bg=CARD,fg=INK,font=("Segoe UI Semibold",20)).pack(anchor="w",padx=32,pady=(25,18))
         form=tk.Frame(win,bg=CARD);form.pack(fill="both",expand=True,padx=32)
-        fields=[("Product code / SKU","code"),("Category","category"),("Product name","name"),("Size","size"),("Variant / color","variant"),("Quantity","quantity"),("Weight (grams)","weight_g"),("Shipment rate / kg (RMB)","shipping_rate_kg"),("Purchase price / unit (RMB)","purchase_rmb"),("Image file path","image_path"),("Batch code","batch_code")]
+        fields=[("Product code / SKU","code"),("Category","category"),("Product name","name"),("Size","size"),("Variant / color","variant"),("Quantity","quantity"),("Weight (grams)","weight_g"),("Shipment rate / kg (BDT)","shipping_rate_bdt"),("Purchase price / unit (RMB)","purchase_rmb"),("Image file path","image_path"),("Batch code","batch_code")]
         entries={}
         for label,key in fields:
             tk.Label(form,text=label,bg=CARD,fg=INK,font=("Segoe UI Semibold",9)).pack(anchor="w")
@@ -534,15 +545,15 @@ class App(tk.Tk):
             if selected:entries["image_path"].delete(0,"end");entries["image_path"].insert(0,selected)
         def suggest_sku():
             try:
-                weight=float(entries["weight_g"].get()); purchase=float(entries["purchase_rmb"].get()); ship=weight/1000*float(entries["shipping_rate_kg"].get())
-                retail=(purchase+ship)*float(self.db.setting("rmb_rate"))*(1+float(self.db.setting("retail_margin"))/100)
+                weight=float(entries["weight_g"].get()); purchase=float(entries["purchase_rmb"].get()); ship_bdt=weight/1000*float(entries["shipping_rate_bdt"].get())
+                retail=(purchase*float(self.db.setting("rmb_rate"))+ship_bdt)*(1+float(self.db.setting("retail_margin"))/100)
                 entries["code"].delete(0,"end");entries["code"].insert(0,generate_sku(weight,entries["variant"].get(),retail))
             except ValueError:messagebox.showwarning("Missing inputs","Enter weight, variant, shipment rate, and purchase price first.",parent=win)
         quick=tk.Frame(form,bg=CARD);quick.pack(fill="x",pady=(0,8));self.action_button(quick,"Choose image",choose_image,secondary=True).pack(side="left");self.action_button(quick,"Generate SKU",suggest_sku,secondary=True).pack(side="left",padx=8)
         def save():
             try:
                 image_path=store_product_image(entries["image_path"].get().strip())
-                values=(entries["code"].get().strip(),entries["category"].get().strip(),entries["name"].get().strip(),entries["size"].get().strip(),entries["variant"].get().strip(),int(entries["quantity"].get()),float(entries["weight_g"].get()),float(entries["shipping_rate_kg"].get()),float(entries["purchase_rmb"].get()),image_path,entries["batch_code"].get().strip())
+                values=(entries["code"].get().strip(),entries["category"].get().strip(),entries["name"].get().strip(),entries["size"].get().strip(),entries["variant"].get().strip(),int(entries["quantity"].get()),float(entries["weight_g"].get()),float(entries["shipping_rate_bdt"].get()),float(entries["purchase_rmb"].get()),image_path,entries["batch_code"].get().strip())
                 if not all(values[:3]): raise ValueError("Code, category, and name are required")
                 self.db.save_product(values,product_id);win.destroy();self.inventory()
             except (ValueError,sqlite3.IntegrityError) as exc: messagebox.showerror("Cannot save",str(exc),parent=win)
@@ -562,13 +573,13 @@ class App(tk.Tk):
 
     def batch_dialog(self):
         win=tk.Toplevel(self);win.title("Create shipment batch");win.geometry("520x560");win.configure(bg=CARD);win.transient(self);win.grab_set();tk.Label(win,text="Create shipment batch",bg=CARD,fg=INK,font=("Segoe UI Semibold",19)).pack(anchor="w",padx=30,pady=(24,16));form=tk.Frame(win,bg=CARD);form.pack(fill="both",expand=True,padx=30);entries={}
-        defaults=(("Supply date",date.today().isoformat()),("Shipment rate / kg (RMB)","0"),("Sourcing cost (RMB)","0"),("Status","Open"),("Notes",""))
+        defaults=(("Supply date",date.today().isoformat()),("Shipment rate / kg (BDT)","0"),("Sourcing cost (RMB)","0"),("Status","Open"),("Notes",""))
         for label,default in defaults:tk.Label(form,text=label,bg=CARD,fg=INK,font=("Segoe UI Semibold",9)).pack(anchor="w");e=ttk.Entry(form);e.insert(0,default);e.pack(fill="x",pady=(4,11));entries[label]=e
         def save():
             try:
-                supply=entries["Supply date"].get();datetime.strptime(supply,"%Y-%m-%d");rate=float(entries["Shipment rate / kg (RMB)"].get());sourcing=float(entries["Sourcing cost (RMB)"].get());code=generate_batch_code(self.db.setting("company_prefix"),supply)
+                supply=entries["Supply date"].get();datetime.strptime(supply,"%Y-%m-%d");rate=float(entries["Shipment rate / kg (BDT)"].get());sourcing=float(entries["Sourcing cost (RMB)"].get());code=generate_batch_code(self.db.setting("company_prefix"),supply)
                 if rate<0 or sourcing<0:raise ValueError("Batch costs cannot be negative")
-                self.db.conn.execute("INSERT INTO batches(code,supply_date,shipment_rate_kg,sourcing_cost_rmb,status,notes) VALUES(?,?,?,?,?,?)",(code,supply,rate,sourcing,entries["Status"].get().strip() or "Open",entries["Notes"].get().strip()));self.db.conn.commit();self.db.set_settings({"supply_date":supply,"sourcing_cost_rmb":str(sourcing)});win.destroy();messagebox.showinfo("Batch created",f"Active batch: {code}");self.expenses()
+                self.db.conn.execute("INSERT INTO batches(code,supply_date,shipment_rate_bdt,sourcing_cost_rmb,status,notes) VALUES(?,?,?,?,?,?)",(code,supply,rate,sourcing,entries["Status"].get().strip() or "Open",entries["Notes"].get().strip()));self.db.conn.commit();self.db.set_settings({"supply_date":supply,"sourcing_cost_rmb":str(sourcing)});win.destroy();messagebox.showinfo("Batch created",f"Active batch: {code}");self.expenses()
             except (ValueError,sqlite3.IntegrityError) as exc:messagebox.showerror("Cannot create batch",str(exc),parent=win)
         self.action_button(form,"Create and activate batch",save).pack(fill="x",pady=10)
 
@@ -775,17 +786,17 @@ class App(tk.Tk):
         for label,value,color in (("Sales last 7 days",money(weekly),GREEN),("Sales this month",money(monthly),PRIMARY),("All recorded sales",money(all_sales),ORANGE),("Shared overheads",money(overhead),RED)):
             c=self.card(totals);c.pack(side="left",fill="x",expand=True,padx=(0,12));tk.Frame(c,bg=color,height=3).pack(fill="x");tk.Label(c,text=label,bg=CARD,fg=MUTED).pack(anchor="w",padx=16,pady=(13,4));tk.Label(c,text=value,bg=CARD,fg=INK,font=("Segoe UI Semibold",16)).pack(anchor="w",padx=16,pady=(0,13))
         wrap=self.card(body);wrap.pack(fill="both",expand=True)
-        cols=("code","name","purchase","ship","allocated","landed","retail","wholesale","margin")
+        cols=("code","name","allocated","purchase","ship","landed","retail","wholesale","margin")
         tree=ttk.Treeview(wrap,columns=cols,show="headings")
-        for c,l in zip(cols,("Code","Product","Purchase RMB","Ship RMB","Sourcing RMB","Landed BDT","Retail BDT","Wholesale BDT","Retail profit")):tree.heading(c,text=l)
+        for c,l in zip(cols,("Code","Product","Sourcing RMB","Purchase RMB","Shipping BDT","Landed BDT","Retail BDT","Wholesale BDT","Retail profit")):tree.heading(c,text=l)
         for c,w in zip(cols,(105,210,100,90,105,110,110,120,105)):tree.column(c,width=w,anchor="e" if c not in ("code","name") else "w")
         products,costs,_,_,_,_=self.context()
-        for p,c in zip(products,costs):tree.insert("","end",values=(p["code"],p["name"],f"{c.purchase_rmb:,.2f}",f"{c.shipping_rmb:,.2f}",f"{c.sourcing_rmb:,.2f}",f"{c.total_bdt:,.2f}",f"{c.retail_bdt:,.2f}",f"{c.wholesale_bdt:,.2f}",f"{c.retail_bdt-c.total_bdt:,.2f}"))
+        for p,c in zip(products,costs):tree.insert("","end",values=(p["code"],p["name"],f"{c.sourcing_rmb:,.2f}",f"{c.purchase_rmb:,.2f}",f"{c.shipping_bdt:,.2f}",f"{c.total_bdt:,.2f}",f"{c.retail_bdt:,.2f}",f"{c.wholesale_bdt:,.2f}",f"{c.retail_bdt-c.total_bdt:,.2f}"))
         tree.pack(fill="both",expand=True,padx=15,pady=15)
 
     def report_rows(self):
         products,costs,_,_,_,_=self.context()
-        return [[p["code"],p["name"],p["category"],p["quantity"],c.purchase_rmb,c.shipping_rmb,c.sourcing_rmb,c.total_bdt,c.retail_bdt,c.wholesale_bdt] for p,c in zip(products,costs)]
+        return [[p["code"],p["name"],p["category"],p["quantity"],c.sourcing_rmb,c.purchase_rmb,c.shipping_bdt,c.total_bdt,c.retail_bdt,c.wholesale_bdt] for p,c in zip(products,costs)]
 
     def export_xlsx(self):
         path=filedialog.asksaveasfilename(defaultextension=".xlsx",filetypes=[("Excel workbook","*.xlsx")],initialfile=f"CBDS-profitability-{date.today()}.xlsx")
@@ -798,7 +809,7 @@ class App(tk.Tk):
             ws.merge_cells("A1:J1");ws["A1"]="CHINA BD STORE — PROFITABILITY REPORT";ws["A1"].font=Font(size=18,bold=True,color="FFFFFF");ws["A1"].fill=PatternFill("solid",fgColor="0B684F");ws["A1"].alignment=Alignment(horizontal="center");ws.row_dimensions[1].height=32
             ws.merge_cells("A2:J2");ws["A2"]=f"Official CBDS report • Generated by {APP_NAME} {APP_VERSION} • {datetime.now():%Y-%m-%d %H:%M}";ws["A2"].font=Font(italic=True,color="666666");ws["A2"].alignment=Alignment(horizontal="center")
             logo=XLImage(resource_path("assets/cbds_logo.png"));logo.width=210;logo.height=105;ws.add_image(logo,"A4");ws.row_dimensions[4].height=82
-            headers=["Code","Product","Category","Quantity","Purchase RMB","Shipping RMB","Sourcing RMB","Landed BDT","Retail BDT","Wholesale BDT"]
+            headers=["Code","Product","Category","Quantity","Sourcing RMB","Purchase RMB","Shipping BDT","Landed BDT","Retail BDT","Wholesale BDT"]
             for col,value in enumerate(headers,1):
                 cell=ws.cell(6,col,value);cell.font=Font(bold=True,color="FFFFFF");cell.fill=PatternFill("solid",fgColor="B91C2D");cell.alignment=Alignment(horizontal="center")
             thin=Side(style="thin",color="E5E7EB")
@@ -843,7 +854,7 @@ class App(tk.Tk):
                 canvas.setFillAlpha(1);canvas.setFont("Helvetica",8);canvas.setFillColor(colors.HexColor("#6B7280"));canvas.drawCentredString(148.5*mm,9*mm,"CBDS • China BD Store • Value in Every Detail • From China to your home");canvas.restoreState()
             doc=SimpleDocTemplate(path,pagesize=landscape(A4),rightMargin=12*mm,leftMargin=12*mm,topMargin=10*mm,bottomMargin=17*mm)
             styles=getSampleStyleSheet();story=[PDFImage(str(resource_path("assets/cbds_logo.png")),width=60*mm,height=30*mm),Paragraph("<b>Product Profitability Report</b>",styles["Title"]),Paragraph(f"Generated by {APP_NAME} {APP_VERSION} on {datetime.now():%Y-%m-%d %H:%M}",styles["Normal"]),Spacer(1,5*mm)]
-            headers=["Code","Product","Category","Qty","Buy RMB","Ship RMB","Source RMB","Landed BDT","Retail BDT","Wholesale BDT"]
+            headers=["Code","Product","Category","Qty","Source RMB","Buy RMB","Ship BDT","Landed BDT","Retail BDT","Wholesale BDT"]
             data=[headers]+[[str(v) if i<4 else f"{float(v):,.2f}" for i,v in enumerate(row)] for row in self.report_rows()]
             table=Table(data,repeatRows=1,colWidths=[22*mm,43*mm,27*mm,12*mm,20*mm,20*mm,22*mm,24*mm,24*mm,27*mm])
             table.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,0),colors.HexColor("#0B684F")),("TEXTCOLOR",(0,0),(-1,0),colors.white),("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),("FONTSIZE",(0,0),(-1,-1),7.2),("GRID",(0,0),(-1,-1),.25,colors.HexColor("#D1D5DB")),("ROWBACKGROUNDS",(0,1),(-1,-1),[colors.white,colors.HexColor("#F3F8F6")]),("ALIGN",(3,1),(-1,-1),"RIGHT"),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("TOPPADDING",(0,0),(-1,-1),4),("BOTTOMPADDING",(0,0),(-1,-1),4)]))

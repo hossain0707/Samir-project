@@ -8,7 +8,7 @@
       "variant": "Pink",
       "quantity": 1,
       "weight_g": 380.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 39.0
     },
     {
@@ -19,7 +19,7 @@
       "variant": "Chocolate",
       "quantity": 1,
       "weight_g": 740.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 38.0
     },
     {
@@ -30,7 +30,7 @@
       "variant": "Maroon",
       "quantity": 1,
       "weight_g": 650.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 31.0
     },
     {
@@ -41,7 +41,7 @@
       "variant": "Dark Blue",
       "quantity": 1,
       "weight_g": 300.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 18.7
     },
     {
@@ -52,7 +52,7 @@
       "variant": "Red Met",
       "quantity": 1,
       "weight_g": 800.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 30.0
     },
     {
@@ -63,7 +63,7 @@
       "variant": "Pink Bright",
       "quantity": 1,
       "weight_g": 950.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 30.0
     },
     {
@@ -74,7 +74,7 @@
       "variant": "Black",
       "quantity": 1,
       "weight_g": 600.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 59.0
     },
     {
@@ -85,7 +85,7 @@
       "variant": "Ash",
       "quantity": 1,
       "weight_g": 570.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 30.0
     },
     {
@@ -96,7 +96,7 @@
       "variant": "Cream",
       "quantity": 1,
       "weight_g": 680.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 59.0
     },
     {
@@ -107,7 +107,7 @@
       "variant": "Chocolate",
       "quantity": 1,
       "weight_g": 580.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 39.0
     },
     {
@@ -118,7 +118,7 @@
       "variant": "Cream",
       "quantity": 1,
       "weight_g": 630.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 59.0
     },
     {
@@ -129,7 +129,7 @@
       "variant": "Chocolate",
       "quantity": 1,
       "weight_g": 360.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 30.0
     },
     {
@@ -140,7 +140,7 @@
       "variant": "Off White",
       "quantity": 1,
       "weight_g": 600.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 49.0
     },
     {
@@ -151,7 +151,7 @@
       "variant": "Pink",
       "quantity": 1,
       "weight_g": 570.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 35.0
     },
     {
@@ -162,7 +162,7 @@
       "variant": "Purple",
       "quantity": 1,
       "weight_g": 520.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 33.0
     },
     {
@@ -173,7 +173,7 @@
       "variant": "Cream",
       "quantity": 1,
       "weight_g": 580.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 33.0
     },
     {
@@ -184,7 +184,7 @@
       "variant": "Purple White",
       "quantity": 1,
       "weight_g": 450.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 23.0
     },
     {
@@ -195,7 +195,7 @@
       "variant": "Turquoise",
       "quantity": 1,
       "weight_g": 650.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 35.0
     },
     {
@@ -206,7 +206,7 @@
       "variant": "Ash",
       "quantity": 1,
       "weight_g": 400.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 24.0
     },
     {
@@ -217,7 +217,7 @@
       "variant": "Red",
       "quantity": 1,
       "weight_g": 550.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 18.0
     },
     {
@@ -228,7 +228,7 @@
       "variant": "Red",
       "quantity": 1,
       "weight_g": 580.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 19.0
     },
     {
@@ -239,7 +239,7 @@
       "variant": "Pink",
       "quantity": 1,
       "weight_g": 610.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 28.0
     },
     {
@@ -250,7 +250,7 @@
       "variant": "Pink Cain",
       "quantity": 1,
       "weight_g": 460.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 25.0
     },
     {
@@ -261,7 +261,7 @@
       "variant": "Mushroom",
       "quantity": 1,
       "weight_g": 490.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 26.0
     },
     {
@@ -272,7 +272,7 @@
       "variant": "PinkBlue",
       "quantity": 1,
       "weight_g": 225.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 20.0
     },
     {
@@ -283,7 +283,7 @@
       "variant": "Green",
       "quantity": 1,
       "weight_g": 310.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 23.0
     },
     {
@@ -294,7 +294,7 @@
       "variant": "Pink",
       "quantity": 1,
       "weight_g": 320.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 17.0
     },
     {
@@ -305,7 +305,7 @@
       "variant": "CrockAsh",
       "quantity": 1,
       "weight_g": 650.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 39.0
     },
     {
@@ -316,7 +316,7 @@
       "variant": "Crock black",
       "quantity": 1,
       "weight_g": 620.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 37.9
     },
     {
@@ -327,7 +327,7 @@
       "variant": "Purple",
       "quantity": 1,
       "weight_g": 870.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 26.0
     },
     {
@@ -338,7 +338,7 @@
       "variant": "Bluered",
       "quantity": 1,
       "weight_g": 710.0,
-      "shipping_rate_kg": 780.0,
+      "shipping_rate_bdt": 780.0,
       "purchase_rmb": 26.9
     }
   ]

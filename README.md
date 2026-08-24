@@ -1,4 +1,4 @@
-# CBDs — China BD Store Business Suite v2.0
+# CBDs — China BD Store Business Suite v2.0.1
 
 A polished Windows desktop application for China BD Store (CBDS) product sourcing, inventory, shipment costing, partner expenses, and profitability management.
 
@@ -61,10 +61,10 @@ The executable will be created at `dist\CBDs.exe`.
 
 For every product:
 
-1. `Shipping RMB = weight in kg × shipping rate per kg`
+1. `Shipping BDT = weight in kg × shipping rate per kg in BDT`
 2. `Allocated sourcing RMB = product purchase RMB ÷ total purchase RMB × total sourcing RMB`
-3. `Landed RMB = purchase RMB + shipping RMB + allocated sourcing RMB`
-4. `Landed BDT = landed RMB × RMB exchange rate`
+3. `Goods subtotal RMB = purchase RMB + allocated sourcing RMB`
+4. `Landed BDT = goods subtotal RMB × RMB exchange rate + shipping BDT`
 5. Retail and wholesale prices apply their configured margins to landed BDT.
 
 ## Security note
