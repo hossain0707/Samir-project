@@ -1,6 +1,17 @@
+import os
+import tempfile
 import unittest
+from pathlib import Path
 
-from app import APP_NAME, DEFAULT_FONT, calculate_cost
+from app import (
+    APP_NAME,
+    DEFAULT_FONT,
+    calculate_cost,
+    calculate_partner_settlement,
+    generate_batch_code,
+    generate_sku,
+    store_product_image,
+)
 
 
 class Product(dict):
@@ -27,6 +38,34 @@ class CostingTests(unittest.TestCase):
         result = calculate_cost(product, 0, 100, 19.2, 30, 20)
         self.assertEqual(result.sourcing_rmb, 0)
         self.assertEqual(result.total_bdt, 0)
+
+    def test_batch_code_format(self):
+        self.assertEqual(generate_batch_code("China-CBDS", "2026-08-24"), "CBDS-20260824")
+
+    def test_sku_format_matches_business_rule(self):
+        self.assertEqual(generate_sku(380, "Pink", 1272), "380P1272")
+        self.assertEqual(generate_sku(75.4, "", 99.5), "075X100")
+
+    def test_partner_settlement_balance(self):
+        self.assertEqual(calculate_partner_settlement(10_000, 3_000, 1_000), 12_000)
+        self.assertEqual(calculate_partner_settlement(0, 0, 1_000), -1_000)
+
+    def test_product_image_is_copied_to_managed_storage(self):
+        previous = os.environ.get("LOCALAPPDATA")
+        try:
+            with tempfile.TemporaryDirectory() as temporary:
+                os.environ["LOCALAPPDATA"] = temporary
+                source = Path(temporary) / "source.png"
+                source.write_bytes(b"test-image")
+                stored = Path(store_product_image(str(source)))
+                self.assertTrue(stored.is_file())
+                self.assertEqual(stored.parent.name, "product_images")
+                self.assertEqual(stored.read_bytes(), b"test-image")
+        finally:
+            if previous is None:
+                os.environ.pop("LOCALAPPDATA", None)
+            else:
+                os.environ["LOCALAPPDATA"] = previous
 
 
 if __name__ == '__main__':
