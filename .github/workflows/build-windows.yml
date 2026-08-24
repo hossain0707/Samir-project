@@ -35,6 +35,18 @@ jobs:
             dist/CBDs.exe
             dist/CBDs.exe.sha256
           if-no-files-found: error
+      - name: Publish latest Windows download
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: CBDs Latest Windows Build
+          body: Download the newest verified CBDs Windows executable below.
+          make_latest: true
+          overwrite_files: true
+          files: |
+            dist/CBDs.exe
+            dist/CBDs.exe.sha256
       - name: Publish tagged release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
